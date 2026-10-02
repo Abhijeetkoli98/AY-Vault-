@@ -288,6 +288,18 @@ body {
   gap: 20px;
 }
 
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulse-amber {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
 .system-status-indicator {
   display: flex;
   align-items: center;
@@ -302,10 +314,12 @@ body {
   height: 8px;
   border-radius: 50%;
   background-color: var(--success);
+  animation: pulse-green 2s infinite ease-out;
 }
 
 .status-dot.warning {
   background-color: var(--warning);
+  animation: pulse-amber 1.8s infinite ease-out;
 }
 
 .user-menu-btn {
@@ -421,12 +435,31 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 20px;
-  transition: border-color var(--transition), transform var(--transition);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
 }
 
 .summary-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.summary-card:hover::before {
+  opacity: 1;
 }
 
 .summary-card-header {
@@ -503,15 +536,22 @@ body {
   border: 1px solid transparent;
   transition: all var(--transition);
   text-decoration: none;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn-primary {
   background: var(--primary);
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .btn-secondary {
@@ -522,7 +562,7 @@ body {
 
 .btn-secondary:hover {
   background: #202b42;
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-sm {
@@ -882,3 +922,60 @@ body {
     padding: 0 16px;
   }
 }
+
+/* ===================================================================
+   TOAST NOTIFICATION SYSTEM
+   =================================================================== */
+
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+  animation: toast-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 280px;
+  max-width: 440px;
+  border-left: 3px solid var(--primary);
+}
+
+.toast.toast-success {
+  border-left-color: var(--success);
+}
+
+.toast.toast-warning {
+  border-left-color: var(--warning);
+}
+
+.toast.toast-danger {
+  border-left-color: var(--danger);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+

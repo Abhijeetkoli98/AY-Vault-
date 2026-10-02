@@ -572,6 +572,7 @@ function toggleIdentifierMasking() {
     btn.innerText = maskIdentifiers ? '👁️ Show Raw Identifiers' : '🔒 Mask Identifiers';
   }
   renderAuditLogs();
+  showToast(maskIdentifiers ? 'Sensitive identifiers are now masked.' : 'Displaying raw cryptographic hashes and IDs.', 'info');
 }
 
 function maskString(str, visibleChars = 4) {
@@ -897,4 +898,41 @@ function formatBytes(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// ===================================================================
+// IN-APP TOAST SYSTEM
+// ===================================================================
+
+function showToast(message, type = 'info', duration = 3500) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const icons = {
+    success: '✓',
+    warning: '⚠️',
+    danger: '⛔',
+    info: 'ℹ️'
+  };
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span style="font-size: 1.1rem;">${icons[type] || 'ℹ️'}</span>
+    <span style="flex: 1; line-height: 1.4;">${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.transition = 'all 0.25s ease';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(50px)';
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
 }
