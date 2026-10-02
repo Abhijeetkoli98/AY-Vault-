@@ -1,0 +1,70 @@
+# CodeRabbit Configuration for AY Vault
+# Secure Offline Document Management System
+version: "2"
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+      - "develop"
+
+  path_filters:
+    - "!data/**"
+    - "!data/vault/**"
+    - "!data/backups/**"
+    - "!**/*.enc"
+    - "!**/*.ayb"
+    - "!__pycache__/**"
+
+  tools:
+    ast-grep:
+      enabled: true
+    shellcheck:
+      enabled: true
+    ruff:
+      enabled: true
+    bandit:
+      enabled: true
+
+  prompts:
+    - path: "security/**"
+      instructions: |
+        Act as a Principal Cryptographer and Application Security Engineer.
+        - Verify AES-256-GCM encryption enforces authenticated encryption (AEAD) with unique 96-bit nonces.
+        - Ensure master keys and derived keys are handled securely and never logged.
+        - Verify timing attack mitigations (constant-time comparison) for hashes and tokens.
+        - Enforce Bell-LaPadula Multilevel Security (No Read Up) and departmental compartmentalization.
+
+    - path: "auth/**"
+      instructions: |
+        Act as an Identity & Access Management (IAM) Specialist.
+        - Enforce RFC 9106 Argon2id password hashing parameters (memory_cost >= 64MB, time_cost >= 3).
+        - Verify account lockout is strictly enforced after exactly 5 failed login attempts.
+        - Ensure session tokens are cryptographically random and time-limited.
+
+    - path: "audit/**"
+      instructions: |
+        Act as a Forensic Auditor and Blockchain Security Specialist.
+        - Ensure every audit record strictly chains to previous_hash.
+        - Check that hash calculations include all canonical fields deterministically.
+        - Verify that tampering detection catches payload alterations and broken linkages.
+
+    - path: "documents/**"
+      instructions: |
+        - Ensure uploaded files are NEVER written to disk in plaintext.
+        - Check that path sanitization prevents directory traversal (../, ..\\).
+        - Ensure SHA-256 digests of plaintext and ciphertext are verified.
+
+chat:
+  auto_reply: true

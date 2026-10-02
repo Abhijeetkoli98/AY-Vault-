@@ -1,0 +1,24 @@
+# Roo Code & Cline Rules - AY Vault
+
+## Project Overview
+AY Vault is a secure offline document management desktop system written in Python 3, Tkinter, and SQLite.
+External packages are strictly limited to `cryptography`, `argon2-cffi`, and `passlib`.
+
+## Critical Architecture Invariants
+1. **Never Store Plaintext on Disk**:
+   - All vaulted documents must be encrypted using `EncryptionManager.encrypt_bytes` (AES-256-GCM) with unique random nonces before saving to `data/vault/`.
+2. **Central Authorization**:
+   - Never check permissions directly inside UI buttons or file operations.
+   - Always invoke `PolicyEngine.evaluate(session, action, resource, context)`.
+   - Adhere to Bell-LaPadula MLS (No Read Up) and departmental compartmentalization.
+3. **Immutable Audit Ledger**:
+   - Every security-relevant event must append to `audit_log` via `AuditLogger.log_event`.
+   - Every block must hash the `previous_hash` to guarantee continuous cryptographic chain linkage.
+4. **Account Lockout Policy**:
+   - Strictly lock account (`is_locked = 1`) after exactly 5 consecutive failed login attempts.
+5. **No Placeholders or Stubs**:
+   - Code must be fully implemented, tested, and error-handled.
+
+## Verification Commands
+- Validate GSD System: `powershell -ExecutionPolicy Bypass -File scripts/validate-all.ps1`
+- Run Main Application: `python main.py`

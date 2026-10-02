@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AY Vault — Modern Secure Offline Document Management System.">
+  <title>AY Vault — Security Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ===================================================================
+       LOGIN MODAL / AUTHENTICATION OVERLAY
+       =================================================================== -->
+  <div id="login-overlay" class="modal-backdrop active" style="z-index: 9999;">
+    <div class="modal-card" style="max-width: 440px;">
+      <div style="padding: 32px 28px; text-align: center;">
+        <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; margin: 0 auto 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+          🔒
+        </div>
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">AY VAULT</h2>
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 20px;">Secure Document Vault</p>
+
+        <!-- Alert Banner -->
+        <div id="login-alert" style="display: none; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.82rem; font-weight: 500; text-align: left;"></div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="login-username">Username</label>
+            <input type="text" id="login-username" class="form-control" placeholder="Username" required value="admin">
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Password" required value="Admin@AYVault2026!">
+          </div>
+          <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; padding: 10px; margin-top: 4px;">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Quick Demo Credential Selectors -->
+        <div style="margin-top: 20px; padding: 12px; background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: left;">
+          <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">
+            Demo Personas:
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('admin', 'Admin@AYVault2026!')">Alex (Admin)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('sarah_mgr', 'Manager@AYVault2026!')">Sarah (Manager)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('bob_viewer', 'Viewer@AYVault2026!')">Bob (Viewer)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('dave_locked', 'Locked@AYVault2026!')">Dave (Locked)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MAIN APPLICATION LAYOUT
+       =================================================================== -->
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside id="app-sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-symbol">AY</div>
+        <div class="brand-text">
+          <h1>AY VAULT</h1>
+          <p>Secure Document Vault</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main Navigation">
+        <a class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" id="nav-documents" onclick="switchView('documents')">
+          <span class="icon">📁</span>
+          <span>Documents</span>
+        </a>
+        <a class="nav-item" id="nav-upload" onclick="switchView('upload')">
+          <span class="icon">📤</span>
+          <span>Secure Upload</span>
+        </a>
+        <a class="nav-item" id="nav-audit" onclick="switchView('audit')">
+          <span class="icon">📋</span>
+          <span>Audit Logs</span>
+        </a>
+        <a class="nav-item" id="nav-security" onclick="switchView('security')">
+          <span class="icon">🛡️</span>
+          <span>Security Policies</span>
+        </a>
+        <a class="nav-item" id="nav-settings" onclick="switchView('settings')">
+          <span class="icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Bottom User Context (Minimal & Clean) -->
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-user-avatar">A</div>
+        <div class="user-info">
+          <div id="user-display-name" class="user-name">Sarah</div>
+          <div id="user-display-role" class="user-role">Manager</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">☰</button>
+          <div id="header-title" class="header-title">Security Dashboard</div>
+        </div>
+        <div class="header-right">
+          <div id="system-status-pill" class="system-status-indicator">
+            <span class="status-dot"></span>
+            <span id="system-status-text">System Secure</span>
+          </div>
+
+          <!-- User Profile Icon & Dropdown -->
+          <div class="user-menu-btn" onclick="toggleUserDropdown(event)" title="User Account Menu">
+            👤
+            <div id="user-dropdown-menu" class="user-dropdown">
+              <div style="padding: 8px 16px;">
+                <div id="dropdown-user-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User</div>
+                <div id="dropdown-user-role" style="font-size: 0.75rem; color: var(--text-muted);">Manager</div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" onclick="switchView('settings')">⚙️ Settings & Info</a>
+              <a class="dropdown-item" onclick="switchView('security')">🛡️ Security Policies</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" style="color: var(--danger);" onclick="handleLogout()">🚪 Sign Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Container -->
+      <main class="page-container">
+
+        <!-- ================= VIEW 1: DASHBOARD ================= -->
+        <section id="view-dashboard" class="view-panel">
+          <!-- Welcome Greeting -->
+          <div class="welcome-banner">
+            <h2 id="dashboard-greeting" class="welcome-title">Welcome back, Sarah</h2>
+            <p class="welcome-subtitle">Here is the current security and document status of your vault.</p>
+          </div>
+
+          <!-- 4 Clean Summary Cards -->
+          <div class="summary-cards-grid">
+            <!-- Card 1: Documents -->
+            <div class="summary-card" onclick="switchView('documents')" style="cursor: pointer;" title="View all documents">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Documents</span>
+                <span class="summary-card-icon">📄</span>
+              </div>
+              <div id="stat-doc-count" class="summary-card-value">5</div>
+              <div class="summary-card-desc">Encrypted documents stored</div>
+            </div>
+
+            <!-- Card 2: Storage -->
+            <div class="summary-card" onclick="switchView('documents')" style="cursor: pointer;" title="View stored documents">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Storage</span>
+                <span class="summary-card-icon">💾</span>
+              </div>
+              <div id="stat-storage-size" class="summary-card-value">1.4 MB</div>
+              <div class="summary-card-desc">Securely stored</div>
+            </div>
+
+            <!-- Card 3: Security -->
+            <div class="summary-card" onclick="switchView('security')" style="cursor: pointer;" title="View security policies & lockouts">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Security</span>
+                <span class="summary-card-icon">🛡️</span>
+              </div>
+              <div id="stat-security-status" class="summary-card-value status-healthy">Healthy</div>
+              <div id="stat-security-desc" class="summary-card-desc">No active security issues</div>
+            </div>
+
+            <!-- Card 4: Audit Status -->
+            <div class="summary-card" onclick="switchView('audit')" style="cursor: pointer;" title="View audit ledger">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Audit Status</span>
+                <span class="summary-card-icon">✓</span>
+              </div>
+              <div id="stat-audit-status" class="summary-card-value status-healthy">Verified</div>
+              <div id="stat-audit-desc" class="summary-card-desc">Audit logs are intact</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="section-header">Quick Actions</div>
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="switchView('upload')">➕ Upload Document</button>
+            <button class="btn btn-secondary" onclick="switchView('documents')">📁 View Documents</button>
+            <button class="btn btn-secondary" onclick="switchView('audit')">📋 View Audit Logs</button>
+            <button class="btn btn-secondary" onclick="handleSecurityCheck()">🛡️ Security Check</button>
+          </div>
+
+          <!-- Security Status / Alert Banner -->
+          <div id="dashboard-security-banner" class="status-alert-banner healthy" onclick="handleBannerClick()">
+            <div class="status-alert-content">
+              <span id="banner-icon">✓</span>
+              <span id="banner-text">System secure — All cryptographic protections active</span>
+            </div>
+            <span id="banner-action" style="font-size: 0.8rem; font-weight: 500; text-decoration: underline; display: none;">Review Access</span>
+          </div>
+
+          <!-- Recent Activity (Human-Readable) -->
+          <div class="activity-card">
+            <div class="section-header" style="margin-bottom: 16px;">
+              <span>Recent Activity</span>
+              <a onclick="switchView('audit')" style="font-size: 0.82rem; color: var(--primary); text-decoration: none; cursor: pointer; font-weight: 500;">View all activity →</a>
+            </div>
+
+            <div id="activity-list-container" class="activity-list">
+              <!-- Dynamically rendered via app.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW 2: DOCUMENTS ================= -->
+        <section id="view-documents" class="view-panel" style="display: none;">
+          <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="doc-search" class="form-control" placeholder="Search documents..." style="width: 240px;" oninput="filterDocuments()">
+                <select id="doc-filter-class" class="form-control" style="width: 160px;" onchange="filterDocuments()">
+                  <option value="ALL">All Classifications</option>
+                  <option value="TOP_SECRET">TOP_SECRET</option>
+                  <option value="RESTRICTED">RESTRICTED</option>
+                  <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+                  <option value="UNRESTRICTED">UNRESTRICTED</option>
+                </select>
+                <select id="doc-filter-dept" class="form-control" style="width: 150px;" onchange="filterDocuments()">
+                  <option value="ALL">All Departments</option>
+                  <option value="Security">Security</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Executive">Executive</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="switchView('upload')">➕ Upload Document</button>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="app-table">
+                <thead>
+                  <tr>
+                    <th>Document</th>
+                    <th>Classification</th>
+                    <th>Department</th>
+                    <th>Author</th>
+                    <th>Size</th>
+                    <th>Version</th>
+                    <th>Access</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="documents-table-body">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW 3: SECURE UPLOAD ================= -->
+        <section id="view-upload" class="view-panel" style="display: none;">
+          <div class="card" style="max-width: 680px; margin: 0 auto;">
+            <div class="section-header" style="margin-bottom: 4px;">Secure Document Upload</div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+              Uploaded documents are immediately encrypted before storage. Plaintext is never stored.
+            </p>
+
+            <form id="upload-form" onsubmit="handleUpload(event)">
+              <div class="form-group">
+                <label class="form-label" for="upload-title">Document Title *</label>
+                <input type="text" id="upload-title" class="form-control" placeholder="e.g. Q4 Infrastructure Architecture" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="upload-file">Select File</label>
+                <input type="file" id="upload-file" class="form-control" onchange="handleFileSelected(event)">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                <div>
+                  <label class="form-label" for="upload-class">Classification Level *</label>
+                  <select id="upload-class" class="form-control">
+                    <option value="UNRESTRICTED">UNRESTRICTED</option>
+                    <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+                    <option value="RESTRICTED">RESTRICTED</option>
+                    <option value="TOP_SECRET">TOP_SECRET</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" for="upload-dept">Department *</label>
+                  <select id="upload-dept" class="form-control">
+                    <option value="Security">Security</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                    <option value="Executive">Executive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="upload-desc">Notes / Description (Optional)</label>
+                <textarea id="upload-desc" class="form-control" rows="4" placeholder="Brief description of the document..."></textarea>
+              </div>
+
+              <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="switchView('documents')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Encrypt & Save Document</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ================= VIEW 4: AUDIT LOGS ================= -->
+        <section id="view-audit" class="view-panel" style="display: none;">
+          <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <div class="section-header" style="margin-bottom: 2px;">Audit Logs & System History</div>
+                <p style="font-size: 0.82rem; color: var(--text-secondary);">Tamper-evident cryptographic ledger of all vault activities.</p>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-secondary btn-sm" id="btn-toggle-masking" onclick="toggleIdentifierMasking()">👁️ Show Raw Identifiers</button>
+                <button class="btn btn-primary btn-sm" onclick="handleVerifyAudit()">🔍 Verify Audit Integrity</button>
+                <button class="btn btn-secondary btn-sm" onclick="handleSimulateTamperPrompt()">⚡ Simulate Tamper Test</button>
+                <button class="btn btn-secondary btn-sm" onclick="handleExportAudit()">📥 Export CSV</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="app-table">
+                <thead>
+                  <tr>
+                    <th>Event #</th>
+                    <th>Time</th>
+                    <th>Activity</th>
+                    <th>User</th>
+                    <th>Resource</th>
+                    <th>Status</th>
+                    <th>Log Hash</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW 5: SECURITY POLICIES ================= -->
+        <section id="view-security" class="view-panel" style="display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Policy Simulator -->
+            <div class="card">
+              <div class="section-header">Security Policy Simulator</div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 18px;">
+                Test how the Bell-LaPadula MLS & Compartmentalization rules evaluate access decisions:
+              </p>
+
+              <form onsubmit="handleSimulatePolicy(event)">
+                <div class="form-group">
+                  <label class="form-label" for="sim-user">Subject User</label>
+                  <select id="sim-user" class="form-control"></select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="sim-doc">Target Document</label>
+                  <select id="sim-doc" class="form-control"></select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="sim-action">Requested Action</label>
+                  <select id="sim-action" class="form-control">
+                    <option value="doc:read">Read Document</option>
+                    <option value="doc:download">Export Document</option>
+                    <option value="doc:write">Update / Modify</option>
+                    <option value="doc:delete">Delete Document</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">
+                  Evaluate Policy
+                </button>
+              </form>
+
+              <div id="sim-decision-box" style="margin-top: 18px; padding: 14px; border-radius: var(--radius-md); background: var(--bg-subtle); border: 1px solid var(--border-color); display: none;">
+                <div id="sim-decision-badge" class="badge badge-success" style="margin-bottom: 8px;">PERMITTED</div>
+                <div id="sim-decision-rule" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;"></div>
+                <div id="sim-decision-reason" style="font-size: 0.82rem; color: var(--text-secondary);"></div>
+              </div>
+            </div>
+
+            <!-- Lockout Manager -->
+            <div class="card">
+              <div class="section-header" style="color: var(--warning);">Account Lockouts</div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+                Accounts are automatically locked after 5 consecutive failed login attempts.
+              </p>
+              <div class="table-responsive">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Failed Logins</th>
+                      <th>State</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lockout-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW 6: SETTINGS & SECURITY DETAILS ================= -->
+        <section id="view-settings" class="view-panel" style="display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- System Security Details -->
+            <div class="card">
+              <div class="section-header">Security Architecture Details</div>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Underlying cryptographic primitives and security mechanisms operating inside the vault.
+              </p>
+
+              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Document Encryption:</span>
+                  <span style="font-weight: 500;">AES-256-GCM (Authenticated AEAD)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Password Hashing:</span>
+                  <span style="font-weight: 500;">Argon2id (RFC 9106, 64 MB memory)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Audit Continuity:</span>
+                  <span style="font-weight: 500;">SHA-256 Merkle-Chained Ledger</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Access Model:</span>
+                  <span style="font-weight: 500;">Bell-LaPadula MLS (No Read Up)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                  <span style="color: var(--text-muted);">Lockout Policy:</span>
+                  <span style="font-weight: 500; color: var(--warning);">Strict 5 Consecutive Failures</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Provisioning & Session -->
+            <div class="card">
+              <div class="section-header">User & Session Controls</div>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Manage identity and session state.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <button class="btn btn-secondary" onclick="openCreateUserModal()">➕ Provision New User Account</button>
+                <button class="btn btn-secondary" onclick="handleCreateBackupPrompt()">💾 Create Encrypted Backup Archive (.ayb)</button>
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 6px;">
+                  <button class="btn btn-secondary" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3); width: 100%;" onclick="handleLogout()">
+                    🚪 Terminate Session & Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: SECURITY CHECK RESULT
+       =================================================================== -->
+  <div id="modal-security-check" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-title">Security Status Check</div>
+          <span id="sec-check-status-badge" class="badge badge-success">SYSTEM HEALTHY</span>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-security-check')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="padding: 14px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
+          <p id="sec-check-message" style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; margin: 0;"></p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: var(--text-secondary);">
+          <div>✓ AES-256-GCM AEAD encryption validated across all disk documents.</div>
+          <div>✓ Argon2id RFC 9106 password hashing with salt verification.</div>
+          <div>✓ Append-only SHA-256 Merkle chain integrity verified.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('modal-security-check')">OK</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-security-check'); switchView('security');">View Policies</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: POLICY DECISION INSPECTOR
+       =================================================================== -->
+  <div id="modal-policy-inspector" class="modal-backdrop">
+    <div class="modal-card">
+      <div id="inspector-banner" class="status-alert-banner warning" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0; margin-bottom: 0;">
+        <span style="font-size: 1.25rem;">⛔</span>
+        <span id="inspector-status-title" style="font-weight: 600;">Access Denied by Policy</span>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Rule Evaluated:</div>
+            <div id="inspector-rule" style="font-family: var(--font-mono); color: var(--text-primary); font-size: 0.85rem;">POL_003_MLS_NO_READ_UP</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Reason:</div>
+            <div id="inspector-reason" style="color: var(--text-primary); line-height: 1.5;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('modal-policy-inspector')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: DECRYPTED DOCUMENT PREVIEW
+       =================================================================== -->
+  <div id="modal-doc-preview" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="modal-title" id="preview-title">Document Inspection</div>
+          <span id="preview-badge" class="badge badge-TOP_SECRET">TOP_SECRET</span>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-doc-preview')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <span id="preview-filename"></span>
+          <span style="color: var(--success);">✓ Authenticated Decryption Verified</span>
+        </div>
+        <pre id="preview-content" style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.82rem; max-height: 320px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="downloadCurrentPreview()">Download File</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-doc-preview')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

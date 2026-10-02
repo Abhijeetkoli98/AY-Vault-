@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Vault sensitive runtime keys and databases
+data/.master.key
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/vault/*
+!data/vault/.gitkeep
+data/backups/*
+!data/backups/.gitkeep

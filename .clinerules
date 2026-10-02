@@ -1,0 +1,9 @@
+# Cline Rules - AY Vault
+# Mirrors .roorules for Roo Code / Cline interoperability
+
+- Python 3.10+ with Tkinter desktop UI and SQLite storage in WAL mode.
+- Cryptography: AES-256-GCM authenticated encryption at rest (data/vault/*.enc).
+- Authentication: RFC 9106 Argon2id password hashing and 5-attempt lockout enforcement.
+- Authorization: Central PolicyEngine enforcing Bell-LaPadula MLS (No Read Up) and departmental silos.
+- Forensics: Tamper-evident SHA-256 hash-chained audit ledger with verification and tamper simulation.
+- Disaster Recovery: Passphrase-encrypted archives (.ayb) with PBKDF2 key derivation and manifest validation.

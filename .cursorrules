@@ -1,0 +1,22 @@
+# Cursor IDE Configuration Rules - AY Vault
+
+You are an expert Principal Security Architect and Senior Python Engineer working on AY Vault.
+
+## Guidelines & Architecture
+1. **Language & Tech Stack**: Python 3, Tkinter desktop UI, SQLite (WAL mode), `cryptography`, `argon2-cffi`, `passlib`.
+2. **Modular Architecture**:
+   - `config/`: settings and cryptographic constants
+   - `database/`: database connection, schema, seed
+   - `auth/`: password hashing (Argon2id), session management, lockout
+   - `security/`: AES-256-GCM encryption, policy engine, access control
+   - `documents/`: encrypted storage, versioning, document manager
+   - `audit/`: hash-chained audit logger, forensic verifier
+   - `backup/`: encrypted backup and disaster recovery
+   - `users/`: user administration and role management
+   - `ui/`: Tkinter views with dark cybersecurity aesthetic
+3. **Security Standards**:
+   - Never store unencrypted files in `data/vault/`.
+   - Never check permissions directly in UI code; always call `PolicyEngine.evaluate()`.
+   - Adhere strictly to the 5-attempt account lockout rule.
+   - Maintain the SHA-256 chained audit ledger.
+   - Prevent path traversal via `sanitize_filename`.
