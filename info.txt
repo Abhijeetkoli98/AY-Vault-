@@ -1,0 +1,91 @@
+================================================================================
+AY VAULT — SECURE DOCUMENT MANAGEMENT SYSTEM (DMS)
+================================================================================
+
+PROJECT OVERVIEW:
+AY Vault is an enterprise-grade Secure Document Management System designed for 
+small and medium-sized businesses (SMBs). It provides cryptographic security, 
+strict Role-Based Access Control (RBAC), multi-level clearance enforcement, 
+tamper-evident audit logging, and automated encrypted backup management.
+
+--------------------------------------------------------------------------------
+DEPLOYMENT & REPOSITORY:
+--------------------------------------------------------------------------------
+- Live Cloud Application: https://ay-vault.web.app/
+- GitHub Repository:      https://github.com/Abhijeetkoli98/AY-Vault-
+- Local Development:      http://127.0.0.1:5000/
+
+--------------------------------------------------------------------------------
+DEMO PERSONAS & CREDENTIALS:
+--------------------------------------------------------------------------------
+1. Administrator:
+   - Username: admin
+   - Password: Admin@AYVault2026!
+   - Role: Admin | Clearance: TOP_SECRET | Department: Security
+   - Permissions: Full administrative access, user provisioning, security audits, backups.
+
+2. Operations Manager:
+   - Username: sarah_mgr
+   - Password: Manager@AYVault2026!
+   - Role: Manager | Clearance: RESTRICTED | Department: Operations
+   - Permissions: Read/write operational documents, create folders, upload versions.
+
+3. Read-Only Viewer:
+   - Username: bob_viewer
+   - Password: Viewer@AYVault2026!
+   - Role: Viewer | Clearance: CONFIDENTIAL | Department: Finance
+   - Permissions: Read-only access to authorized records. Strictly blocked from deleting or downloading.
+
+4. Locked Security Account:
+   - Username: dave_locked
+   - Password: Locked@AYVault2026!
+   - Role: Viewer | Clearance: CONFIDENTIAL | Department: Engineering
+   - Status: Locked due to 5 consecutive failed login attempts (requires admin unlock).
+
+--------------------------------------------------------------------------------
+SECURITY & CRYPTOGRAPHIC ARCHITECTURE:
+--------------------------------------------------------------------------------
+1. Document Encryption (AES-256-GCM):
+   - Authenticated encryption with associated data (AEAD).
+   - Tamper-resistant with 128-bit authentication tags.
+   - Master envelope key derivation via PBKDF2-HMAC-SHA256 (100,000 iterations).
+
+2. Password Hashing (Argon2id):
+   - Memory-hard password hashing function compliant with OWASP recommendations.
+   - Resistant to GPU/ASIC cracking attacks.
+
+3. Access Control (Bell-LaPadula MLS + RBAC):
+   - Simple Security Property (No Read Up - NRU).
+   - Star Property (No Write Down - NWD).
+   - Multi-tier clearance levels: UNRESTRICTED < CONFIDENTIAL < RESTRICTED < TOP_SECRET.
+
+4. Forensic Audit Trail (Cryptographic Hash Chaining):
+   - Blockchain-style immutable record chaining with SHA-256 block hashes.
+   - Real-time bit-level tamper detection and repair/re-anchoring protocols.
+
+5. Encrypted Backup & Disaster Recovery (.ayb):
+   - Single-archive compressed vault backups encrypted using AES-256-GCM.
+   - Self-contained metadata, folder structures, and audit ledger state.
+
+--------------------------------------------------------------------------------
+HOW TO RUN LOCALLY:
+--------------------------------------------------------------------------------
+1. Prerequisites:
+   - Python 3.10+
+   - Node.js (for Firebase deployment)
+
+2. Install Python Dependencies:
+   pip install -r requirements.txt
+
+3. Initialize & Seed Database:
+   python database/seed.py
+
+4. Launch Server:
+   python server.py
+   (Access via http://127.0.0.1:5000)
+
+5. Run Automated Test Suites:
+   python scripts/test_dms_comprehensive.py
+   python scripts/test_live_server.py
+   node scripts/test_cdp_live.js
+================================================================================
