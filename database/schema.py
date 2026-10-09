@@ -21,6 +21,18 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TEXT
 );
 
+-- Folders Table for Document Organization
+CREATE TABLE IF NOT EXISTS folders (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    parent_id TEXT,
+    created_by INTEGER NOT NULL,
+    department TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(created_by) REFERENCES users(id)
+);
+
 -- Documents Table
 CREATE TABLE IF NOT EXISTS documents (
     id TEXT PRIMARY KEY,
@@ -31,6 +43,9 @@ CREATE TABLE IF NOT EXISTS documents (
     mime_type TEXT NOT NULL,
     classification_level TEXT NOT NULL,
     department TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'General',
+    tags TEXT NOT NULL DEFAULT '',
+    folder_id TEXT,
     owner_id INTEGER NOT NULL,
     owner_username TEXT NOT NULL,
     plaintext_sha256 TEXT NOT NULL,
@@ -40,8 +55,22 @@ CREATE TABLE IF NOT EXISTS documents (
     description TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    last_accessed_at TEXT,
     is_deleted INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY(owner_id) REFERENCES users(id)
+    FOREIGN KEY(owner_id) REFERENCES users(id),
+    FOREIGN KEY(folder_id) REFERENCES folders(id)
+);
+
+-- Document Access Log for Recently Accessed Tracking
+CREATE TABLE IF NOT EXISTS document_access_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    username TEXT NOT NULL,
+    action TEXT NOT NULL,
+    accessed_at TEXT NOT NULL,
+    FOREIGN KEY(document_id) REFERENCES documents(id),
+    FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
 -- Document Versions Table

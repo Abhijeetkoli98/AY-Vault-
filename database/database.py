@@ -41,6 +41,17 @@ class DatabaseManager:
         conn = self.get_connection()
         with conn:
             conn.executescript(SCHEMA_SQL)
+            # Lightweight schema migration for existing databases
+            for col, col_type in [
+                ("category", "TEXT NOT NULL DEFAULT 'General'"),
+                ("tags", "TEXT NOT NULL DEFAULT ''"),
+                ("folder_id", "TEXT"),
+                ("last_accessed_at", "TEXT"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE documents ADD COLUMN {col} {col_type};")
+                except sqlite3.OperationalError:
+                    pass  # Column already exists
 
     @contextmanager
     def transaction(self) -> Generator[sqlite3.Cursor, None, None]:

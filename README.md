@@ -1,12 +1,12 @@
-# AY Vault — Secure Offline Document Management System
+# AY Vault — Secure Enterprise Document Management System
 
 ![Security Badge](https://img.shields.io/badge/Security-AES--256--GCM-blue)
 ![Auth Badge](https://img.shields.io/badge/Auth-Argon2id-green)
 ![Integrity Badge](https://img.shields.io/badge/Audit-SHA--256--Chained-cyan)
-![Storage Badge](https://img.shields.io/badge/Storage-Offline--Encrypted-orange)
+![Storage Badge](https://img.shields.io/badge/Storage-Encrypted--DMS-orange)
 ![License](https://img.shields.io/badge/Architecture-Modular-purple)
 
-**AY Vault** is a high-assurance, offline-first secure document vault and record-management desktop application built with **Python 3**, **Tkinter**, and **SQLite**. Designed for air-gapped workstations, sensitive enterprise data compartments, and defense-in-depth security environments, it provides authenticated symmetric encryption at rest, multilevel access control (Bell-LaPadula MLS), account lockout safeguards, tamper-evident hash-chained audit logging, and encrypted disaster recovery.
+**AY Vault** is a high-assurance, secure document management system (DMS) tailored for small and medium-sized businesses (SMBs). Designed for cloud hosting, on-premises deployment, and secure compliance environments, it provides authenticated symmetric encryption at rest (AES-256-GCM), role-based access control (Admin, Manager, Viewer), account lockout safeguards, tamper-evident hash-chained audit logging, folder and category organization, duplicate-file detection, version tracking, and encrypted disaster recovery.
 
 ---
 

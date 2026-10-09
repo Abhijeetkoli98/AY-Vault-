@@ -36,10 +36,11 @@ class UserSession:
 
 
 class SessionManager:
-    """Manages active application session lifecycle."""
+    """Manages active application session lifecycle with multi-session token support."""
 
     def __init__(self):
         self._current_session: Optional[UserSession] = None
+        self._sessions_by_token: dict = {}
 
     def create_session(
         self, user_record: dict, ip_address: str = "127.0.0.1 (Localhost)"
@@ -59,6 +60,20 @@ class SessionManager:
             ip_address=ip_address,
         )
         self._current_session = session
+        self._sessions_by_token[session.token] = session
+        return session
+
+    def get_session_by_token(self, token: Optional[str]) -> Optional[UserSession]:
+        """Retrieves and touches session associated with specific token."""
+        if not token or token not in self._sessions_by_token:
+            return None
+        session = self._sessions_by_token[token]
+        if session.is_expired():
+            del self._sessions_by_token[token]
+            if self._current_session is session:
+                self._current_session = None
+            return None
+        session.touch()
         return session
 
     def get_current_session(self) -> Optional[UserSession]:
@@ -66,14 +81,23 @@ class SessionManager:
         if self._current_session is None:
             return None
         if self._current_session.is_expired():
+            if self._current_session.token in self._sessions_by_token:
+                del self._sessions_by_token[self._current_session.token]
             self._current_session = None
             return None
         self._current_session.touch()
         return self._current_session
 
-    def terminate_session(self) -> None:
-        """Terminates active session (logout)."""
-        self._current_session = None
+    def terminate_session(self, token: Optional[str] = None) -> None:
+        """Terminates active session (logout) by token or global current."""
+        if token and token in self._sessions_by_token:
+            ended = self._sessions_by_token.pop(token)
+            if self._current_session is ended:
+                self._current_session = None
+        else:
+            if self._current_session and self._current_session.token in self._sessions_by_token:
+                self._sessions_by_token.pop(self._current_session.token, None)
+            self._current_session = None
 
     def is_authenticated(self) -> bool:
         """Returns True if a valid unexpired session exists."""

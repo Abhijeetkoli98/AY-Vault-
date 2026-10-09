@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AY Vault — Secure Document Management System for Small & Medium Businesses.">
+  <title>AY Vault — Secure Document Management</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ===================================================================
+       LOGIN MODAL / AUTHENTICATION OVERLAY
+       =================================================================== -->
+  <div id="login-overlay" class="modal-backdrop active" style="z-index: 9999;">
+    <div class="modal-card" style="max-width: 440px;">
+      <div style="padding: 32px 28px; text-align: center;">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin: 0 auto 14px; box-shadow: 0 4px 16px rgba(37,99,235,0.4);">
+          🛡️
+        </div>
+        <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">AY VAULT</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 20px;">Secure Document Management System</p>
+
+        <!-- Alert Banner -->
+        <div id="login-alert" style="display: none; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.82rem; font-weight: 500; text-align: left;"></div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="login-username">Username or Corporate Email</label>
+            <input type="text" id="login-username" class="form-control" placeholder="e.g. alex.vance" required value="admin">
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••••••" required value="Admin@AYVault2026!">
+          </div>
+          <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; padding: 11px; margin-top: 6px; font-weight: 600;">
+            Sign In to Vault
+          </button>
+        </form>
+
+        <!-- Clean Demo Persona Selectors (No Plaintext Password Exposure) -->
+        <div style="margin-top: 24px; padding: 14px; background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
+              Demo Workspaces:
+            </span>
+            <span style="font-size: 0.68rem; color: var(--text-muted);">Click to load profile</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPersona('admin', 'Admin@AYVault2026!')" title="Full System Administrator Rights">
+              👤 Alex (Admin)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPersona('sarah_mgr', 'Manager@AYVault2026!')" title="Operations Manager Rights">
+              👤 Sarah (Manager)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPersona('bob_viewer', 'Viewer@AYVault2026!')" title="Read-Only Financial Viewer">
+              👤 Bob (Viewer)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPersona('dave_locked', 'Locked@AYVault2026!')" title="Demonstrates 5-Attempt Lockout">
+              🔒 Dave (Locked)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MAIN APPLICATION LAYOUT
+       =================================================================== -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-icon">🛡️</div>
+        <div class="sidebar-brand-text">
+          <div class="brand-name">AY VAULT</div>
+          <div class="brand-sub">Secure DMS</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Workspace</div>
+        <a href="#overview" class="nav-item active" id="nav-overview" onclick="switchView('overview')">
+          <span class="nav-icon">📊</span>
+          <span>Overview</span>
+        </a>
+        <a href="#documents" class="nav-item" id="nav-documents" onclick="switchView('documents')">
+          <span class="nav-icon">📁</span>
+          <span>Documents</span>
+        </a>
+        <a href="#shared" class="nav-item" id="nav-shared" onclick="switchView('shared')">
+          <span class="nav-icon">👥</span>
+          <span>Shared with Me</span>
+        </a>
+
+        <div class="nav-section-label">Governance & Management</div>
+        <a href="#users" class="nav-item" id="nav-users" onclick="switchView('users')">
+          <span class="nav-icon">🛡️</span>
+          <span>Users & Roles</span>
+        </a>
+        <a href="#audit" class="nav-item" id="nav-audit" onclick="switchView('audit')">
+          <span class="nav-icon">📋</span>
+          <span>Audit Logs</span>
+        </a>
+        <a href="#backups" class="nav-item" id="nav-backups" onclick="switchView('backups')">
+          <span class="nav-icon">💾</span>
+          <span>Backup & Recovery</span>
+        </a>
+
+        <div class="nav-section-label">Administration</div>
+        <a href="#security" class="nav-item" id="nav-security" onclick="switchView('security')">
+          <span class="nav-icon">🔒</span>
+          <span>Security Center</span>
+        </a>
+        <a href="#settings" class="nav-item" id="nav-settings" onclick="switchView('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card" onclick="toggleUserDropdown(event)">
+          <div class="avatar" id="sidebar-user-avatar">A</div>
+          <div class="user-meta">
+            <div class="user-name" id="user-display-name">Alex Vance</div>
+            <div class="user-role" id="user-display-role">Admin (Top Secret)</div>
+          </div>
+          <button class="user-menu-btn" title="Sign Out" onclick="handleLogout()">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+
+      <!-- TOP HEADER BAR -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">☰</button>
+          <div>
+            <h1 class="header-title" id="header-title">Overview</h1>
+            <div class="header-breadcrumb" id="header-breadcrumb">AY Vault / Management Dashboard</div>
+          </div>
+        </div>
+
+        <div class="header-search">
+          <input type="text" id="global-search-input" class="search-input" placeholder="Search documents, tags, categories..." onkeyup="handleGlobalSearch(event)">
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="openUploadModal()">
+            <span>+ Upload Document</span>
+          </button>
+          <div class="user-dropdown-container">
+            <button class="user-avatar-btn" onclick="toggleUserDropdown(event)">
+              <span id="header-user-avatar">A</span>
+            </button>
+            <div id="user-dropdown-menu" class="dropdown-menu">
+              <div class="dropdown-header">
+                <div id="dropdown-user-name" style="font-weight: 600; color: var(--text-primary);">Alex Vance</div>
+                <div id="dropdown-user-role" style="font-size: 0.76rem; color: var(--text-secondary);">Admin • Security</div>
+              </div>
+              <a href="#profile" class="dropdown-item" onclick="switchView('settings')">⚙️ Account Settings</a>
+              <a href="#security" class="dropdown-item" onclick="switchView('security')">🔒 Security Center</a>
+              <div class="dropdown-divider"></div>
+              <a href="#logout" class="dropdown-item text-danger" onclick="handleLogout()">⏻ Sign Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW CONTAINER -->
+      <div class="content-container">
+
+        <!-- ===============================================================
+             VIEW 1: OVERVIEW DASHBOARD
+             =============================================================== -->
+        <section id="view-overview" class="view-panel">
+          <!-- Summary Cards Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Total Documents</span>
+                <span class="metric-icon">📄</span>
+              </div>
+              <div class="metric-value" id="stat-doc-count">0</div>
+              <div class="metric-desc">Encrypted with AES-256-GCM</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Storage Usage</span>
+                <span class="metric-icon">💾</span>
+              </div>
+              <div class="metric-value" id="stat-storage-size">0 KB</div>
+              <div class="metric-desc">Authenticated Blob Storage</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Team Members</span>
+                <span class="metric-icon">👥</span>
+              </div>
+              <div class="metric-value" id="stat-user-count">4</div>
+              <div class="metric-desc" id="stat-user-desc">All accounts active</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-title">System Health</span>
+                <span class="metric-icon">🛡️</span>
+              </div>
+              <div class="metric-value status-healthy" id="stat-security-status">Secure</div>
+              <div class="metric-desc" id="stat-security-desc">Cryptographic protections active</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Latest Backup</span>
+                <span class="metric-icon">📦</span>
+              </div>
+              <div class="metric-value" style="font-size: 1.25rem;" id="stat-backup-status">Verified</div>
+              <div class="metric-desc" id="stat-backup-desc">Ready for Disaster Recovery</div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="quick-actions-bar">
+            <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Quick Actions:</span>
+            <button class="btn btn-primary btn-sm" onclick="openUploadModal()">
+              <span>+ Upload Document</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="openNewFolderModal()">
+              <span>📁 New Folder</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="switchView('documents')">
+              <span>🔍 Browse Files</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="runQuickHealthScan()">
+              <span>🛡️ Run Health Scan</span>
+            </button>
+          </div>
+
+          <!-- Two-Column Overview Layout -->
+          <div class="overview-grid">
+            <!-- Left Column: Recently Accessed Documents -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recently Accessed Documents</h3>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('documents')">View All</button>
+              </div>
+              <div class="card-body" id="overview-recent-docs">
+                <div class="empty-state">
+                  <div class="empty-icon">📄</div>
+                  <div class="empty-title">No Recent Documents</div>
+                  <div class="empty-desc">Documents you preview or download will appear here for fast access.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Recent Activity Feed -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recent Activity</h3>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('audit')">Full Audit Trail</button>
+              </div>
+              <div class="card-body">
+                <div class="activity-feed" id="overview-activity-feed">
+                  <!-- Dynamic activity items -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 2: DOCUMENTS EXPLORER
+             =============================================================== -->
+        <section id="view-documents" class="view-panel" style="display: none;">
+          <!-- Documents Control Toolbar -->
+          <div class="card" style="margin-bottom: 18px;">
+            <div class="card-body" style="padding: 16px;">
+              <div class="doc-toolbar">
+                <div class="doc-toolbar-left">
+                  <input type="text" id="doc-search-input" class="form-control" style="max-width: 280px;" placeholder="Filter files or tags..." onkeyup="filterDocuments()">
+                  
+                  <select id="doc-category-filter" class="form-control" style="max-width: 170px;" onchange="filterDocuments()">
+                    <option value="ALL">All Categories</option>
+                    <option value="Financial">Financial</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Legal">Legal</option>
+                    <option value="Compliance">Compliance</option>
+                    <option value="Operations">Operations</option>
+                    <option value="General">General</option>
+                  </select>
+
+                  <select id="doc-clearance-filter" class="form-control" style="max-width: 170px;" onchange="filterDocuments()">
+                    <option value="ALL">All Clearances</option>
+                    <option value="UNRESTRICTED">Unrestricted</option>
+                    <option value="CONFIDENTIAL">Confidential</option>
+                    <option value="RESTRICTED">Restricted</option>
+                    <option value="TOP_SECRET">Top Secret</option>
+                  </select>
+                </div>
+
+                <div class="doc-toolbar-right">
+                  <div class="btn-group">
+                    <button class="btn btn-secondary btn-sm active" id="btn-view-table" onclick="setDocViewMode('table')" title="List View">☰</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-view-grid" onclick="setDocViewMode('grid')" title="Grid Cards View">☷</button>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" onclick="openNewFolderModal()">+ New Folder</button>
+                  <button class="btn btn-primary btn-sm" onclick="openUploadModal()">+ Upload</button>
+                </div>
+              </div>
+
+              <!-- Folder Navigation Tabs / Breadcrumb Bar -->
+              <div class="folder-bar" id="doc-folder-bar">
+                <button class="folder-pill active" onclick="selectFolder(null)">📁 All Files</button>
+                <button class="folder-pill" onclick="selectFolder('root')">📄 Unfiled Files</button>
+                <!-- Dynamic folder pills injected here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Content List / Grid -->
+          <div class="card">
+            <div class="card-body" style="padding: 0;">
+              <!-- Table View -->
+              <div id="docs-table-container" class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 36px;"></th>
+                      <th>Document Title</th>
+                      <th>Category</th>
+                      <th>Tags</th>
+                      <th>Folder</th>
+                      <th>Security Level</th>
+                      <th>Size</th>
+                      <th>Version</th>
+                      <th>Last Modified</th>
+                      <th style="text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="docs-table-body">
+                    <!-- Dynamic Document Rows -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Grid Cards View -->
+              <div id="docs-grid-container" class="doc-cards-grid" style="display: none; padding: 20px;">
+                <!-- Dynamic Document Cards -->
+              </div>
+
+              <!-- Empty State Container -->
+              <div id="docs-empty-state" class="empty-state" style="display: none; padding: 60px 20px;">
+                <div class="empty-icon">📁</div>
+                <div class="empty-title">No Documents Found</div>
+                <div class="empty-desc">There are no documents matching your current filter in this folder.</div>
+                <button class="btn btn-primary btn-sm" onclick="openUploadModal()" style="margin-top: 14px;">Upload Document</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 3: SHARED WITH ME
+             =============================================================== -->
+        <section id="view-shared" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Shared Across Departments</h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                Documents shared with your department or organization-wide based on role permissions.
+              </p>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Document Title</th>
+                      <th>Owner</th>
+                      <th>Category</th>
+                      <th>Department</th>
+                      <th>Classification</th>
+                      <th>Access Status</th>
+                      <th style="text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="shared-table-body">
+                    <!-- Dynamic shared rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 4: USERS & ROLES (ACCESS CONTROL)
+             =============================================================== -->
+        <section id="view-users" class="view-panel" style="display: none;">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Team Members & Access Control</h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                  Manage authorized users, role hierarchies, and lockout security policies.
+                </p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openNewUserModal()">+ Add Team Member</button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Role</th>
+                      <th>Department</th>
+                      <th>Clearance Rank</th>
+                      <th>Account Status</th>
+                      <th>Failed Logins</th>
+                      <th>Last Login</th>
+                      <th style="text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <!-- Dynamic user rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- RBAC Permission Matrix Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Role Permissions Summary</h3>
+            </div>
+            <div class="card-body">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <div style="padding: 16px; background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                  <div style="font-weight: 700; color: #60a5fa; margin-bottom: 8px;">👑 Administrator</div>
+                  <ul style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; padding-left: 18px;">
+                    <li>Full read, write, upload, and deletion authority</li>
+                    <li>Disaster recovery & backup creation / restoration</li>
+                    <li>User provisioning, role assignment, and account unlock</li>
+                    <li>Cryptographic audit re-anchoring & forensic verification</li>
+                  </ul>
+                </div>
+
+                <div style="padding: 16px; background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                  <div style="font-weight: 700; color: #34d399; margin-bottom: 8px;">👔 Operations Manager</div>
+                  <ul style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; padding-left: 18px;">
+                    <li>Read and download documents within clearance</li>
+                    <li>Upload documents and create department folders</li>
+                    <li>Audit trail inspection</li>
+                    <li>Cannot delete documents or alter system backups</li>
+                  </ul>
+                </div>
+
+                <div style="padding: 16px; background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                  <div style="font-weight: 700; color: #fbbf24; margin-bottom: 8px;">👁️ Viewer / Specialist</div>
+                  <ul style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; padding-left: 18px;">
+                    <li>Read-only preview of assigned classified documents</li>
+                    <li>Strictly blocked from document deletion (Backend Enforced)</li>
+                    <li>Cannot upload new versions or alter folders</li>
+                    <li>Protected against unauthorized exfiltration</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 5: AUDIT LOGS
+             =============================================================== -->
+        <section id="view-audit" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Immutable Audit Trail</h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                  All document accesses, uploads, downloads, logins, and permission evaluations.
+                </p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="audit-filter-input" class="form-control" style="max-width: 220px;" placeholder="Search user or action..." onkeyup="filterAuditLogs()">
+                <button class="btn btn-secondary btn-sm" onclick="exportAuditCsv()">Export CSV</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Timestamp</th>
+                      <th>User</th>
+                      <th>Event Type</th>
+                      <th>Action</th>
+                      <th>Resource</th>
+                      <th>Status</th>
+                      <th>IP Address</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-table-body">
+                    <!-- Dynamic audit logs -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 6: BACKUP & RECOVERY
+             =============================================================== -->
+        <section id="view-backups" class="view-panel" style="display: none;">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Disaster Recovery & Encrypted Snapshots</h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                  Generate passphrase-protected full system archives (.ayb) containing database, encrypted documents, and manifests.
+                </p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openCreateBackupModal()">+ Create Encrypted Backup</button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Archive Filename</th>
+                      <th>Created Date</th>
+                      <th>Archive Size</th>
+                      <th>Integrity Status</th>
+                      <th>SHA-256 Checksum</th>
+                      <th style="text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="backups-table-body">
+                    <!-- Dynamic backup rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disaster Recovery Guidance -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Restoration Protocol</h3>
+            </div>
+            <div class="card-body">
+              <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">
+                Backups are encrypted using AES-256-GCM authenticated encryption derived from your enterprise master passphrase via PBKDF2-HMAC-SHA256 (600,000 iterations). Restoring a backup overwrites the active database with the archive snapshot and verifies cryptographic file hashes. Only authorized Administrators can execute restoration procedures.
+              </p>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 7: SECURITY CENTER (DEDICATED ADVANCED CONTROLS)
+             =============================================================== -->
+        <section id="view-security" class="view-panel" style="display: none;">
+          <!-- Security Status Banner -->
+          <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--primary);">
+            <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;">
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                  🔒 Dedicated Security & Forensics Center
+                </h3>
+                <p style="font-size: 0.84rem; color: var(--text-secondary);">
+                  Verify cryptographic ledger integrity, test access policies, and simulate tampering diagnostics in an isolated sandbox.
+                </p>
+              </div>
+              <button class="btn btn-primary" onclick="runSecurityVerification()">
+                <span>Run Cryptographic Audit Scan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overview-grid">
+            <!-- Cryptographic Engine Health Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Cryptographic Architecture Status</h3>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-subtle); border-radius: var(--radius-sm);">
+                    <div>
+                      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary);">Document Encryption</div>
+                      <div style="font-size: 0.76rem; color: var(--text-secondary);">AES-256-GCM with 96-bit Nonces & 128-bit Auth Tags</div>
+                    </div>
+                    <span class="badge badge-success">Active & Verified</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-subtle); border-radius: var(--radius-sm);">
+                    <div>
+                      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary);">Password Security</div>
+                      <div style="font-size: 0.76rem; color: var(--text-secondary);">RFC 9106 Argon2id (m=64MB, t=3, p=4) with Cryptographic Salts</div>
+                    </div>
+                    <span class="badge badge-success">Active & Verified</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-subtle); border-radius: var(--radius-sm);">
+                    <div>
+                      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary);">Audit Ledger Tamper Detection</div>
+                      <div style="font-size: 0.76rem; color: var(--text-secondary);">Sequential SHA-256 Hash Chained Blockchain-style Records</div>
+                    </div>
+                    <span class="badge badge-success" id="sec-chain-badge">Intact</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-subtle); border-radius: var(--radius-sm);">
+                    <div>
+                      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary);">Lockout Enforcement</div>
+                      <div style="font-size: 0.76rem; color: var(--text-secondary);">Automatic account lockout after 5 consecutive failed attempts</div>
+                    </div>
+                    <span class="badge badge-success">Enforced</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Forensic Diagnostic Tools Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Forensic Diagnostics & Simulation</h3>
+              </div>
+              <div class="card-body">
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
+                  These diagnostic tools are strictly isolated in this Security Center to demonstrate forensic tamper-detection and cryptographic re-anchoring without polluting everyday operations.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <button class="btn btn-danger btn-sm" onclick="openTamperModal()" style="width: 100%; justify-content: center;">
+                    ⚠️ Simulate Audit Record Tampering
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="openReanchorModal()" style="width: 100%; justify-content: center;">
+                    ⚓ Re-anchor Cryptographic Audit Chain
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="openPolicySimModal()" style="width: 100%; justify-content: center;">
+                    ⚖️ Evaluate Bell-LaPadula MLS Policy Matrix
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ===============================================================
+             VIEW 8: SETTINGS
+             =============================================================== -->
+        <section id="view-settings" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">System & Security Settings</h3>
+            </div>
+            <div class="card-body" style="max-width: 600px;">
+              <div class="form-group">
+                <label class="form-label">Organization Name</label>
+                <input type="text" class="form-control" value="AY Enterprise Vault Solutions" readonly>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Deployment Architecture</label>
+                <input type="text" class="form-control" value="Secure Cloud & Hybrid Enterprise Server (v1.0.0)" readonly>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Inactivity Auto-Lockout</label>
+                <input type="text" class="form-control" value="15 Minutes Inactivity Threshold" readonly>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Failed Password Lockout</label>
+                <input type="text" class="form-control" value="5 Consecutive Attempts" readonly>
+              </div>
+
+              <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                <button class="btn btn-danger btn-sm" onclick="handleLogout()">Lock Session Now</button>
+                <button class="btn btn-secondary btn-sm" onclick="showToast('Settings saved.', 'success')">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 1: UPLOAD DOCUMENT (WITH DUPLICATE DETECTION)
+       =================================================================== -->
+  <div id="modal-upload" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <div class="modal-title">Upload & Encrypt Document</div>
+        <button class="modal-close" onclick="closeModal('modal-upload')">✕</button>
+      </div>
+      <form id="upload-form" onsubmit="handleUploadSubmit(event)">
+        <div class="modal-body">
+          <!-- Duplicate Warning Banner -->
+          <div id="upload-duplicate-warning" class="status-alert-banner warning" style="display: none; margin-bottom: 14px;">
+            <span class="alert-icon">⚠️</span>
+            <div id="upload-duplicate-text">A file with identical cryptographic hash already exists!</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Select File to Encrypt</label>
+            <input type="file" id="upload-file-input" class="form-control" required onchange="handleFileSelected(event)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Document Title</label>
+            <input type="text" id="upload-title-input" class="form-control" placeholder="e.g. Q4 Master Services Agreement" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="upload-category-input" class="form-control">
+                <option value="General">General</option>
+                <option value="Financial">Financial</option>
+                <option value="Technical">Technical</option>
+                <option value="Legal">Legal</option>
+                <option value="Compliance">Compliance</option>
+                <option value="Operations">Operations</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Folder Assignment</label>
+              <select id="upload-folder-input" class="form-control">
+                <option value="">(Root / Unfiled)</option>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Security Classification</label>
+              <select id="upload-clearance-input" class="form-control">
+                <option value="UNRESTRICTED">UNRESTRICTED</option>
+                <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+                <option value="RESTRICTED">RESTRICTED</option>
+                <option value="TOP_SECRET">TOP_SECRET</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Department Compartment</label>
+              <select id="upload-dept-input" class="form-control">
+                <option value="Operations">Operations</option>
+                <option value="Finance">Finance</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Security">Security</option>
+                <option value="Executive">Executive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" id="upload-tags-input" class="form-control" placeholder="e.g. q4, contract, vendor, confidential">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description / Summary</label>
+            <textarea id="upload-desc-input" class="form-control" rows="2" placeholder="Brief explanation of document content..."></textarea>
+          </div>
+
+          <div id="duplicate-override-container" style="display: none; margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #fbbf24; cursor: pointer;">
+              <input type="checkbox" id="upload-allow-duplicate">
+              <span>I understand this is a duplicate. Proceed anyway.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-upload')">Cancel</button>
+          <button type="submit" id="btn-submit-upload" class="btn btn-primary">Encrypt & Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 2: NEW FOLDER
+       =================================================================== -->
+  <div id="modal-new-folder" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 420px;">
+      <div class="modal-header">
+        <div class="modal-title">Create Organizational Folder</div>
+        <button class="modal-close" onclick="closeModal('modal-new-folder')">✕</button>
+      </div>
+      <form onsubmit="handleCreateFolder(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Folder Name</label>
+            <input type="text" id="new-folder-name" class="form-control" placeholder="e.g. Client Contracts 2026" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department Compartment</label>
+            <select id="new-folder-dept" class="form-control">
+              <option value="Operations">Operations</option>
+              <option value="Finance">Finance</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Security">Security</option>
+              <option value="Executive">Executive</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-folder')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Folder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 3: DOCUMENT PREVIEW
+       =================================================================== -->
+  <div id="modal-preview" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 780px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="preview-modal-title">Document Preview</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;" id="preview-modal-subtitle">Decrypted in memory</div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-preview')">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <div class="preview-layout">
+          <div class="preview-main">
+            <div id="preview-content-box" class="preview-content">Loading...</div>
+          </div>
+          <div class="preview-sidebar">
+            <div style="font-weight: 600; font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 12px;">Metadata</div>
+            <div class="meta-row">
+              <span class="meta-label">Category:</span>
+              <span class="meta-value" id="preview-meta-category">General</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Classification:</span>
+              <span class="meta-value" id="preview-meta-classification">CONFIDENTIAL</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Department:</span>
+              <span class="meta-value" id="preview-meta-department">Operations</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Version:</span>
+              <span class="meta-value" id="preview-meta-version">v1</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Size:</span>
+              <span class="meta-value" id="preview-meta-size">1.2 KB</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Owner:</span>
+              <span class="meta-value" id="preview-meta-owner">admin</span>
+            </div>
+
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-primary btn-sm" id="btn-preview-download" onclick="downloadCurrentPreview()">
+                ⬇️ Download Decrypted
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openVersionHistoryForCurrentPreview()">
+                🕒 Version History
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 4: METADATA & RENAME
+       =================================================================== -->
+  <div id="modal-metadata" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">Edit Document Details</div>
+        <button class="modal-close" onclick="closeModal('modal-metadata')">✕</button>
+      </div>
+      <form onsubmit="handleSaveMetadata(event)">
+        <input type="hidden" id="edit-doc-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Document Title</label>
+            <input type="text" id="edit-doc-title" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="edit-doc-category" class="form-control">
+              <option value="General">General</option>
+              <option value="Financial">Financial</option>
+              <option value="Technical">Technical</option>
+              <option value="Legal">Legal</option>
+              <option value="Compliance">Compliance</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Folder</label>
+            <select id="edit-doc-folder" class="form-control">
+              <option value="">(Root / Unfiled)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" id="edit-doc-tags" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="edit-doc-desc" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-metadata')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 5: VERSION HISTORY & NEW VERSION
+       =================================================================== -->
+  <div id="modal-versions" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title" id="version-modal-title">Document Version History</div>
+        <button class="modal-close" onclick="closeModal('modal-versions')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 0.86rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Upload New Version</h4>
+          <form id="new-version-form" onsubmit="handleUploadNewVersion(event)" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="file" id="version-file-input" class="form-control" style="flex: 1; min-width: 180px;" required>
+            <input type="text" id="version-summary-input" class="form-control" placeholder="Change summary..." style="flex: 1; min-width: 180px;" required>
+            <button type="submit" class="btn btn-primary btn-sm">Upload vNext</button>
+          </form>
+        </div>
+
+        <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Historical Snapshots</div>
+        <div id="version-history-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Injected version snapshot items -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-versions')">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 6: CONFIRMATION MODAL (DESTRUCTIVE ACTIONS)
+       =================================================================== -->
+  <div id="modal-confirm" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title" id="confirm-modal-title" style="color: var(--danger);">Confirm Action</div>
+        <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message" style="font-size: 0.86rem; color: var(--text-primary); line-height: 1.5; margin-bottom: 8px;">
+          Are you sure you want to proceed with this operation?
+        </p>
+        <p id="confirm-modal-sub" style="font-size: 0.78rem; color: var(--text-secondary);">
+          This action may be logged in the immutable audit ledger.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Cancel</button>
+        <button id="btn-confirm-action" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 7: CREATE ENCRYPTED BACKUP
+       =================================================================== -->
+  <div id="modal-create-backup" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">Create Encrypted Backup</div>
+        <button class="modal-close" onclick="closeModal('modal-create-backup')">✕</button>
+      </div>
+      <form onsubmit="handleCreateBackup(event)">
+        <div class="modal-body">
+          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 14px;">
+            Generates a tamper-resistant AES-256-GCM archive (.ayb) protected by your encryption passphrase.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Encryption Passphrase</label>
+            <input type="password" id="backup-passphrase" class="form-control" value="AYVaultMasterBackup2026!" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-backup')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate Backup</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 8: TAMPER LAB SIMULATOR (SECURITY CENTER)
+       =================================================================== -->
+  <div id="modal-tamper" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: var(--danger);">Simulate Audit Log Tampering</div>
+        <button class="modal-close" onclick="closeModal('modal-tamper')">✕</button>
+      </div>
+      <form onsubmit="handleTamperSubmit(event)">
+        <div class="modal-body">
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+            This diagnostic tool alters an audit record directly without recalculating hashes, demonstrating that the SHA-256 chain detects any malicious modification.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Target Audit Record ID</label>
+            <input type="number" id="tamper-block-id" class="form-control" value="2" min="1" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-tamper')">Cancel</button>
+          <button type="submit" class="btn btn-danger">Inject Tamper</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 9: RE-ANCHOR AUDIT CHAIN (SECURITY CENTER)
+       =================================================================== -->
+  <div id="modal-reanchor" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: var(--primary);">Re-anchor Cryptographic Audit Chain</div>
+        <button class="modal-close" onclick="closeModal('modal-reanchor')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.84rem; color: var(--text-primary); line-height: 1.5; margin-bottom: 10px;">
+          This administrative forensic procedure recalculates sequential SHA-256 hashes across all records and appends an authenticated re-anchor genesis block.
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-secondary);">
+          Requires Administrator role.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-reanchor')">Cancel</button>
+        <button class="btn btn-primary" onclick="executeReanchorAudit()">Confirm Re-anchor</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 10: POLICY MATRIX SIMULATOR (SECURITY CENTER)
+       =================================================================== -->
+  <div id="modal-policy-sim" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">Bell-LaPadula MLS Policy Evaluator</div>
+        <button class="modal-close" onclick="closeModal('modal-policy-sim')">✕</button>
+      </div>
+      <form onsubmit="handlePolicySimulate(event)">
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Subject (User)</label>
+              <select id="sim-user-select" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Action</label>
+              <select id="sim-action-select" class="form-control">
+                <option value="doc:read">Read Document (NRU)</option>
+                <option value="doc:write">Write Document (*-Property)</option>
+                <option value="doc:download">Download Document</option>
+                <option value="doc:delete">Delete Document</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Object (Document)</label>
+            <select id="sim-doc-select" class="form-control"></select>
+          </div>
+          <div id="sim-result-box" style="display: none; padding: 12px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-top: 10px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-policy-sim')">Close</button>
+          <button type="submit" class="btn btn-primary">Evaluate Policy</button>
+        </div>
+      </form>
+  <!-- ===================================================================
+       MODAL 11: ADD TEAM MEMBER (USERS & ROLES)
+       =================================================================== -->
+  <div id="modal-new-user" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Add Team Member</div>
+          <p class="modal-subtitle">Provision account credentials, role hierarchy, and clearance level</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-new-user')">✕</button>
+      </div>
+      <form id="new-user-form" onsubmit="handleCreateUser(event)">
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="new-user-username">Username *</label>
+              <input type="text" id="new-user-username" class="form-control" placeholder="e.g. emily.watson" required pattern="^[a-zA-Z0-9_\-\.]{3,30}$">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-user-fullname">Full Name *</label>
+              <input type="text" id="new-user-fullname" class="form-control" placeholder="e.g. Emily Watson" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="new-user-role">Role Hierarchy *</label>
+              <select id="new-user-role" class="form-control" required>
+                <option value="Viewer">Viewer (Read-Only Access)</option>
+                <option value="Manager">Manager (Read & Write)</option>
+                <option value="Admin">Administrator (Full Rights)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-user-department">Department *</label>
+              <select id="new-user-department" class="form-control" required>
+                <option value="Operations">Operations</option>
+                <option value="Finance">Finance</option>
+                <option value="Security">Security</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Executive">Executive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="new-user-clearance">Bell-LaPadula Clearance Level *</label>
+            <select id="new-user-clearance" class="form-control" required>
+              <option value="UNRESTRICTED">UNRESTRICTED (Public / Org-wide)</option>
+              <option value="CONFIDENTIAL">CONFIDENTIAL (Standard Internal)</option>
+              <option value="RESTRICTED">RESTRICTED (Department Restricted)</option>
+              <option value="TOP_SECRET">TOP_SECRET (Executive Compartment)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="new-user-password">Initial Password *</label>
+            <input type="password" id="new-user-password" class="form-control" placeholder="Min 8 chars, e.g. Pass@AYVault2026!" required minlength="8">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Must contain at least 8 characters with letters, numbers, and special characters.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-user')">Cancel</button>
+          <button type="submit" id="btn-submit-new-user" class="btn btn-primary">Create Team Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/js/cloud-mock.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

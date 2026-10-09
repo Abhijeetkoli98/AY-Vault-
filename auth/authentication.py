@@ -197,9 +197,9 @@ class AuthenticationService:
 
         return AuthResult(success=True, session=session, remaining_attempts=MAX_FAILED_LOGINS)
 
-    def logout(self) -> None:
+    def logout(self, token: Optional[str] = None) -> None:
         """Terminates session and writes audit event."""
-        session = self.session_manager.get_current_session()
+        session = self.session_manager.get_session_by_token(token) if token else self.session_manager.get_current_session()
         if session:
             self.audit_logger.log_event(
                 event_type="AUTH_LOGOUT",
@@ -212,7 +212,7 @@ class AuthenticationService:
                 ip_address=session.ip_address,
                 details={"duration_seconds": (datetime.datetime.now(datetime.timezone.utc) - session.created_at).total_seconds()},
             )
-            self.session_manager.terminate_session()
+            self.session_manager.terminate_session(token or session.token)
 
     def unlock_user_account(self, target_user_id: int, admin_session: UserSession) -> bool:
         """Unlocks a locked account. Requires Admin privilege."""

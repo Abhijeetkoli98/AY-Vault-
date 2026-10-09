@@ -138,6 +138,7 @@ class BackupManager:
             backups.append(
                 {
                     "filename": bf.name,
+                    "file_name": bf.name,
                     "path": str(bf),
                     "size_bytes": stat.st_size,
                     "created_at": datetime.fromtimestamp(

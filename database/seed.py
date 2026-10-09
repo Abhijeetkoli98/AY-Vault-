@@ -21,6 +21,9 @@ SAMPLE_DOCS = [
         "filename": "AY-SEC-2026-Incident-Response-Plan.md",
         "classification": "TOP_SECRET",
         "department": "Security",
+        "category": "Compliance",
+        "tags": "incident,sop,containment,security",
+        "folder_name": "Security & Compliance",
         "owner_username": "admin",
         "description": "Standard Operating Procedure for handling zero-day exploits, containment isolation, and forensic triage.",
         "content": (
@@ -46,6 +49,9 @@ SAMPLE_DOCS = [
         "filename": "Q3-Financial-Audit-Report.txt",
         "classification": "RESTRICTED",
         "department": "Finance",
+        "category": "Financial",
+        "tags": "audit,reserves,q3,finance",
+        "folder_name": "Financial Ledgers",
         "owner_username": "bob_viewer",
         "description": "Quarterly audit evaluation of liquid operating reserves, capital expenditure, and risk insurance.",
         "content": (
@@ -66,6 +72,9 @@ SAMPLE_DOCS = [
         "filename": "Cloud-Infrastructure-Architecture-Blueprint.md",
         "classification": "CONFIDENTIAL",
         "department": "Engineering",
+        "category": "Technical",
+        "tags": "cloud,architecture,zero-trust,mtls",
+        "folder_name": "Operations",
         "owner_username": "sarah_mgr",
         "description": "Microsegmentation guidelines, mutual TLS parameters, and KMS envelope encryption topologies.",
         "content": (
@@ -80,12 +89,15 @@ SAMPLE_DOCS = [
         ),
     },
     {
-        "title": "AY Enterprise Acceptable Use & Offline Data Handling Policy",
+        "title": "AY Enterprise Acceptable Use & Data Handling Policy",
         "filename": "Company-Acceptable-Use-Policy-v4.txt",
         "classification": "UNRESTRICTED",
         "department": "Operations",
+        "category": "Legal",
+        "tags": "policy,aup,compliance,operations",
+        "folder_name": "Operations",
         "owner_username": "admin",
-        "description": "Mandatory hygiene practices for all personnel operating within air-gapped environments.",
+        "description": "Mandatory hygiene practices for all personnel operating within enterprise environments.",
         "content": (
             "AY ENTERPRISE ACCEPTABLE USE POLICY (AUP-V4)\n"
             "Classification: UNRESTRICTED - ALL PERSONNEL\n\n"
@@ -245,12 +257,28 @@ def seed_database(force_reseed: bool = False) -> None:
         "dave_locked": locked_id,
     }
 
+    # 2.5 Seed Default Folders
+    folder_map = {}
+    default_folders = [
+        ("Security & Compliance", "Security"),
+        ("Financial Ledgers", "Finance"),
+        ("Operations", "Operations"),
+    ]
+    for fname, fdept in default_folders:
+        fid = secure_uuid()
+        db.execute(
+            "INSERT INTO folders (id, name, parent_id, created_by, department, created_at, is_deleted) VALUES (?, ?, NULL, ?, ?, ?, 0);",
+            (fid, fname, admin_id, fdept, now_iso),
+        )
+        folder_map[fname] = fid
+
     # 3. Seed Realistic Encrypted Documents
     for item in SAMPLE_DOCS:
         doc_id = secure_uuid()
         raw_bytes = item["content"].encode("utf-8")
         owner_id = user_map.get(item["owner_username"], admin_id)
         owner_name = item["owner_username"]
+        folder_id = folder_map.get(item.get("folder_name"))
 
         stored_filename, plain_sha, cipher_sha, cipher_size = storage.store_encrypted_bytes(
             doc_id=doc_id, version=1, plaintext_bytes=raw_bytes
@@ -260,11 +288,11 @@ def seed_database(force_reseed: bool = False) -> None:
             """
             INSERT INTO documents (
                 id, title, original_filename, stored_filename, file_size_bytes,
-                mime_type, classification_level, department, owner_id,
-                owner_username, plaintext_sha256, ciphertext_sha256,
+                mime_type, classification_level, department, category, tags, folder_id,
+                owner_id, owner_username, plaintext_sha256, ciphertext_sha256,
                 encryption_algo, version, description, created_at,
-                updated_at, is_deleted
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
+                updated_at, last_accessed_at, is_deleted
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
             """,
             (
                 doc_id,
@@ -275,6 +303,9 @@ def seed_database(force_reseed: bool = False) -> None:
                 "text/markdown" if item["filename"].endswith(".md") else "text/plain",
                 item["classification"],
                 item["department"],
+                item.get("category", "General"),
+                item.get("tags", ""),
+                folder_id,
                 owner_id,
                 owner_name,
                 plain_sha,
@@ -282,6 +313,7 @@ def seed_database(force_reseed: bool = False) -> None:
                 "AES-256-GCM",
                 1,
                 item["description"],
+                now_iso,
                 now_iso,
                 now_iso,
             ),
